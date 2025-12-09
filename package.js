@@ -1,12 +1,12 @@
 {
-  "name": "game-multiplayer",
+  "name": "game-multiplayer-server",
   "version": "1.0.0",
-  "type": "module",
   "main": "server.js",
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.17.0"
+  },
   "scripts": {
     "start": "node server.js"
-  },
-  "dependencies": {
-    "ws": "^8.14.2"
   }
 }
