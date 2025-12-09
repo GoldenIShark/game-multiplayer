@@ -3,16 +3,14 @@ import { randomUUID } from "crypto";
 
 const PORT = process.env.PORT || 3000;
 
-const wss = new WebSocketServer({
-  port: PORT,
-  host: "0.0.0.0"
-});
+const wss = new WebSocketServer({ port: PORT });
 
 console.log("✔ WebSocket Multiplayer Server aktif di port:", PORT);
 
-// Semua pemain online
+// data pemain
 let players = {};
 
+// broadcast
 function broadcast(data) {
   const json = JSON.stringify(data);
   wss.clients.forEach(client => {
@@ -20,21 +18,24 @@ function broadcast(data) {
   });
 }
 
+// koneksi masuk
 wss.on("connection", ws => {
   const id = randomUUID();
 
   players[id] = {
     id,
     x: Math.floor(Math.random() * 500),
-    y: Math.floor(Math.random() * 500)
+    y: Math.floor(Math.random() * 500),
+    dir: "bawah",
+    ts: Date.now()
   };
 
-  console.log("Pemain masuk:", id);
+  console.log("▶ Pemain masuk:", id);
 
   ws.send(JSON.stringify({
     type: "init",
-    id,
-    players
+    id: id,
+    players: players
   }));
 
   broadcast({
@@ -50,25 +51,29 @@ wss.on("connection", ws => {
         if (players[id]) {
           players[id].x = data.x;
           players[id].y = data.y;
+          players[id].z = data.z;
+          players[id].dir = data.dir;
+          players[id].ts = data.ts;
         }
 
         broadcast({
           type: "update",
-          players
+          players: players
         });
       }
-    } catch (e) {
-      console.log("Error:", e);
+
+    } catch (err) {
+      console.log("❌ Error parsing:", err);
     }
   });
 
   ws.on("close", () => {
-    console.log("Pemain keluar:", id);
+    console.log("⛔ Pemain keluar:", id);
     delete players[id];
 
     broadcast({
       type: "player_leave",
-      id
+      id: id
     });
   });
 });
